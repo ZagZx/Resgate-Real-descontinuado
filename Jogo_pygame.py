@@ -36,7 +36,8 @@ vida = 3
 passos = 20
 
 #escrever na tela
-fonte = pygame.font.SysFont('pixelart', 40)
+fonte = pygame.font.SysFont('PixelGameFont', 20)
+fonte2 = pygame.font.SysFont('fonte/pixelart.ttf', 40)
 mensagem = fonte.render(str(passos),False,(255,255,255)) #número de passos na tela
 
 prinx = charx
@@ -48,30 +49,68 @@ while charx == prinx or chary == priny:
     prinx = 100 + (40*randint(0,9)) #posição da princesa
     priny = 100 + (40*randint(0,9))
 
-monx = charx
-mony = chary
-
-while monx == charx or monx == prinx:
-    monx = 100 + (40*randint(0,9))
-while  mony == priny or mony == chary:
-    mony = 100 + (40*randint(0,9))
-
 charcolision = pygame.Rect(charx,chary,40,40)
 princolision = pygame.Rect(prinx, priny,40,40)
+
+condicoes = [charcolision,princolision]
+
+
+
+conditions = [[prinx,priny],[charx,chary]]
+#FALTA FAZER ANDAR, NÃO SPAWNAR DENTRO DE PAREDE, COLISÃO
+class Monstros:
+    global conditions
+    def __init__(self,monx,mony):
+        self.monx = monx
+        self.mony = mony
+
+        self.lista = []
+    def MonCord(self):
+        for a in range(0,len(conditions)):
+            while self.monx == conditions[a][0] or self.mony == conditions[a][1]:
+                self.monx = 100+40*randint(0,9)
+                self.mony = 100+40*randint(0,9)
+        
+        self.lista.append(self.monx)
+        self.lista.append(self.mony)
+        return self.lista
+#FALTA FAZER ANDAR, NÃO SPAWNAR DENTRO DE PAREDE, COLISÃO
+cordmonstros = []
+monrect = []
+
+qntmonster = 5
+for a in range(0,qntmonster):
+    aux = Monstros(100+(40*randint(0,9)),100+(40*randint(0,9)))
+    cordmonstros.append(aux.MonCord())
+    monrect.append(pygame.Rect(cordmonstros[a][0],cordmonstros[a][1],40,40))
+    condicoes.append(pygame.Rect(cordmonstros[a][0],cordmonstros[a][1],40,40))
+
+print(cordmonstros)
+print(monrect)
+
+
+
+
+
 
 
 class Paredes:
     def __init__(self,bposx, bposy) -> None:
         self.bposx = bposx
         self.bposy = bposy
+
         self.rec1 = pygame.Rect(self.bposx-40, self.bposy, 120,40)
         self.rec2 = pygame.Rect(self.bposx, self.bposy-40, 40,120)
+
         self.colisao = []
         self.cordenadas = []
+
         self.random = randint(0,1)
-    def Rectbar(self):
-        #arrumar a ativação do while
-        while self.rec1.colliderect(charcolision) or self.rec1.colliderect(princolision) or self.rec2.colliderect(charcolision) or self.rec2.colliderect(princolision):
+
+    def Rectbar(self):      
+        
+        while any(self.rec1.colliderect(condicoes[a]) for a in range(0,len(condicoes))) or any(self.rec2.colliderect(condicoes[a]) for a in range(0,len(condicoes))):
+        #while self.rec1.colliderect(charcolision) or self.rec1.colliderect(princolision) or self.rec2.colliderect(charcolision) or self.rec2.colliderect(princolision):
             if self.random == 1:
                 self.bposy = 100+(40*randint(0,9))
             else:
@@ -87,11 +126,13 @@ class Paredes:
     def Cordbar(self):
         self.cordenadas.append(self.bposx)
         self.cordenadas.append(self.bposy)
+
         return self.cordenadas
 cordbarreiras = []
 barcolision = []
 
-qntbar = 2
+qntbar = 100
+
 for a in range(0,qntbar):
     aux = Paredes(100+(40*randint(0,9)),100+(40*randint(0,9)))
     barcolision.append(aux.Rectbar())
@@ -99,26 +140,78 @@ for a in range(0,qntbar):
 
 
 
-
-
-
 #para rotacionar o personagem ao trocar de lado
 girou = False
 #algumas variáveis para o funcionamento do jogo
-rodando = True
 
+rodando = True
 durante = True
 ganhou = False
 perdeu = False
 andou = False
 
+auxilio = False
+
 clock = pygame.time.Clock()
+
+def Rectchar(X,Y): #-1, 0, ou 1
+    charectandar = pygame.Rect(charx+40*X,chary+40*Y,40,40)
+    return charectandar
 
 while rodando:
     
     if durante == True:
         
-        
+        #fechar
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                rodando = False
+                
+            #andar
+            if event.type == pygame.KEYDOWN:
+                
+            
+                if event.key== pygame.K_w or event.key == pygame.K_UP:
+                    
+                    if (chary == 100) or any(Rectchar(0, -1).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)):
+                        pass
+                    else:
+                        chary -= 40
+                        passos -= 1
+                        andou = True
+                if event.key== pygame.K_s or event.key == pygame.K_DOWN:
+                    if (chary == 460) or any(Rectchar(0, 1).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)): 
+                        pass
+                    else:
+                        chary += 40
+                        passos -= 1
+                        andou = True
+                if event.key== pygame.K_a or event.key == pygame.K_LEFT:
+                    if charx == 100 or any(Rectchar(-1, 0).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)):  
+                        pass
+                    else:
+                        if girou == False:
+                            char = pygame.transform.flip(char,1,0)
+                            girou = True
+                        charx -= 40
+                        passos -= 1
+                        andou = True
+                if event.key== pygame.K_d or event.key == pygame.K_RIGHT:
+                    if charx == 460 or any(Rectchar(1, 0).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)): 
+                        pass
+                    else:
+                        if girou == True:
+                            char = pygame.transform.flip(char,1,0)
+                            girou = False
+                        charx += 40
+                        passos -= 1
+                        andou = True
+                if event.key == pygame.K_v:
+                    vida -= 1
+                if event.key == pygame.K_j:
+                    vida += 1
+                if event.key == pygame.K_l:
+                    passos += 100
         tela.fill((0,0,0))
         for a in range(1,4):
             tela.blit(fundo,(100,100*a))#grama
@@ -135,67 +228,47 @@ while rodando:
                 tela.blit(barreira,(cordbarreiras[a][0], cordbarreiras[a][1]+40*b))
                 tela.blit(barreira,(cordbarreiras[a][0]+40*b, cordbarreiras[a][1]))
 
-        
+        for a in range(0,qntmonster):
+            for b in range(-1,2):
+                tela.blit(monstro,(cordmonstros[a][0],cordmonstros[a][1]))    
         tela.blit(mapa,(100,100)) #aqui são aqueles quadrados pretos
         tela.blit(char, (charx,chary)) #personagem
         tela.blit(princ, (prinx, priny))#princesa
-        #tela.blit(monstro,(monx, mony))#monstro
+        
 
-        tela.blit(impassos, (55,45))#aqui é a imagem do tênis
         tela.blit(mensagem, (20,50))#aqui é o número de passos
+        tela.blit(impassos, (55,45))#aqui é a imagem do tênis
+        
         for a in range(0, vida):
             tela.blit(imvida, (10+30*a,10))
         
-        #fechar
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            #andar
-            if event.type == pygame.KEYDOWN:
+        charect = pygame.Rect(charx, chary, 40,40)   
+        if qntmonster > 0:
+            for a in monrect:
+                if charect.colliderect(a):
+                    vida -=1
+                    index = monrect.index(a)
+                    monrect.remove(a)
+                    
+                    cordmonstros.pop(index)
+                    qntmonster -=1
                 
-            
-                if event.key== pygame.K_w or event.key == pygame.K_UP:
-                    if (chary == 100) or any(pygame.Rect(charx, chary-40, 40,40).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)):
-                        pass
-                    else:
-                        chary -= 40
-                        passos -= 1
-                        andou = True
-                if event.key== pygame.K_s or event.key == pygame.K_DOWN:
-                    if (chary == 460) or any(pygame.Rect(charx, chary+40, 40,40).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)): 
-                        pass
-                    else:
-                        chary += 40
-                        passos -= 1
-                        andou = True
-                if event.key== pygame.K_a or event.key == pygame.K_LEFT:
-                    if charx == 100 or any(pygame.Rect(charx-40, chary, 40,40).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)):  
-                        pass
-                    else:
-                        if girou == False:
-                            char = pygame.transform.flip(char,1,0)
-                            girou = True
-                        charx -= 40
-                        passos -= 1
-                        andou = True
-                if event.key== pygame.K_d or event.key == pygame.K_RIGHT:
-                    if charx == 460 or any(pygame.Rect(charx+40, chary, 40,40).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)): 
-                        pass
-                    else:
-                        if girou == True:
-                            char = pygame.transform.flip(char,1,0)
-                            girou = False
-                        charx += 40
-                        passos -= 1
-                        andou = True
-                if event.key == pygame.K_v:
-                    vida -= 1
-                if event.key == pygame.K_j:
-                    vida += 1
-                if event.key == pygame.K_l:
-                    passos += 100
 
+            # AINDA ATIVA MAIS DE UMA VEZ
+                    
+
+            #if any(charect.colliderect(monrect[a])for a in range(0,qntmonster)):
+             #   qntmonster-=1
+              #  monrect.pop(a)
+               # cordmonstros.pop(a)                
+                #vida -= 1
+                #====================================
+                #aqui tá ativando mais de uma vez
+                #====================================
+                
+                
+
+                
         if chary == priny and charx == prinx:
             ganhou = True
             durante = False
@@ -211,21 +284,24 @@ while rodando:
         
     elif perdeu == True:
         tela.fill((0,0,0))
-        mensagem = fonte.render('Perdeu kkkkkkk',False,(255,255,255),(0,0,0))
+        mensagem = fonte2.render('Perdeu kkkkkkk',False,(255,255,255),(0,0,0))
         tela.blit(mensagem, (200,270))   
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                rodando = False
+                pygame.quit()
+                sys.exit()
         
     
     elif ganhou == True:
         tela.fill((0,0,0))
-        mensagem = fonte.render('Você ganhou!',False, (255,255,255))
+        mensagem = fonte2.render('Você ganhou!',False, (255,255,255))
         tela.blit(mensagem, (200,270))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                rodando = False
+                pygame.quit()
+                sys.exit()
               
     pygame.display.flip()
-    dt = clock.tick(60)
-
+    #dt = clock.tick(60)
+pygame.quit()
+sys.exit()
