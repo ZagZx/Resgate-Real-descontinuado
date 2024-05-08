@@ -36,7 +36,7 @@ vida = 3
 passos = 20
 
 #escrever na tela
-fonte = pygame.font.SysFont('PixelGameFont', 20)
+fonte = pygame.font.SysFont('fonte/PixelGameFont.ttf', 40)
 fonte2 = pygame.font.SysFont('fonte/pixelart.ttf', 40)
 mensagem = fonte.render(str(passos),False,(255,255,255)) #número de passos na tela
 
@@ -65,6 +65,7 @@ class Monstros:
         self.mony = mony
 
         self.lista = []
+        self.lista2 = []
     def MonCord(self):
         for a in range(0,len(conditions)):
             while self.monx == conditions[a][0] or self.mony == conditions[a][1]:
@@ -74,6 +75,50 @@ class Monstros:
         self.lista.append(self.monx)
         self.lista.append(self.mony)
         return self.lista
+    def Andar(self):
+        self.random = randint(0,1)
+
+        self.difx = False
+        self.dify = False
+
+        if self.monx != charx:
+            self.difx = True
+        if self.mony != chary:
+            self.dify = True
+
+
+
+        if self.difx and self.dify:
+            if self.random == 0:
+                if self.monx > charx:
+                    self.monx -= 40
+                else:
+                    self.monx += 40
+
+            if self.random == 1:
+                if self.mony > chary:
+                    self.mony -= 40
+                else:
+                    self.mony += 40
+
+        elif self.dify and not self.difx:
+            if self.mony > chary:
+                self.mony -= 40
+            else:
+                self.mony += 40
+
+        elif self.difx and not self.dify:
+            if self.monx > charx:
+                self.monx -= 40
+            else:
+                self.monx += 40
+        self.lista.append(self.monx)
+        self.lista.append(self.mony)
+        return self.lista
+    def NewRect(self):
+        self.rect = pygame.Rect(self.monx,self.mony,40,40)
+        return self.rect
+    
 #FALTA FAZER ANDAR, NÃO SPAWNAR DENTRO DE PAREDE, COLISÃO
 cordmonstros = []
 monrect = []
@@ -131,7 +176,7 @@ class Paredes:
 cordbarreiras = []
 barcolision = []
 
-qntbar = 100
+qntbar = 4
 
 for a in range(0,qntbar):
     aux = Paredes(100+(40*randint(0,9)),100+(40*randint(0,9)))
@@ -148,7 +193,7 @@ rodando = True
 durante = True
 ganhou = False
 perdeu = False
-andou = False
+
 
 auxilio = False
 
@@ -178,14 +223,22 @@ while rodando:
                     else:
                         chary -= 40
                         passos -= 1
-                        andou = True
+                        
+                        for monster in range(len(cordmonstros)):
+                            
+                            cordmonstros[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).Andar()
+                            monrect[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).NewRect()
+
                 if event.key== pygame.K_s or event.key == pygame.K_DOWN:
                     if (chary == 460) or any(Rectchar(0, 1).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)): 
                         pass
                     else:
                         chary += 40
                         passos -= 1
-                        andou = True
+                        for monster in range(len(cordmonstros)):
+                            
+                            cordmonstros[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).Andar()
+                            monrect[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).NewRect()
                 if event.key== pygame.K_a or event.key == pygame.K_LEFT:
                     if charx == 100 or any(Rectchar(-1, 0).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)):  
                         pass
@@ -195,7 +248,10 @@ while rodando:
                             girou = True
                         charx -= 40
                         passos -= 1
-                        andou = True
+                        for monster in range(len(cordmonstros)):
+                            
+                            cordmonstros[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).Andar()
+                            monrect[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).NewRect()
                 if event.key== pygame.K_d or event.key == pygame.K_RIGHT:
                     if charx == 460 or any(Rectchar(1, 0).colliderect(barcolision[a][b]) for a in range(0,qntbar) for b in range(0,2)): 
                         pass
@@ -205,7 +261,10 @@ while rodando:
                             girou = False
                         charx += 40
                         passos -= 1
-                        andou = True
+                        for monster in range(len(cordmonstros)):
+                            
+                            cordmonstros[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).Andar()
+                            monrect[monster] = Monstros(cordmonstros[monster][0],cordmonstros[monster][1]).NewRect()
                 if event.key == pygame.K_v:
                     vida -= 1
                 if event.key == pygame.K_j:
